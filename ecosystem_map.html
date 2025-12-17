@@ -322,16 +322,29 @@
             },
           },
           {
-            id: "steth-contract",
-            name: "Smart Contract stETH",
+            id: "scdb-contract",
+            name: "SCDB Bank",
             type: "BACKEND_CONTRACT",
-            desc: "Treasury / Staking Contract",
+            desc: "Student Committee Decentralized Bank",
             fx: 0,
             fy: 150,
-            fz: -100, // Ancora più indietro e in alto
+            fz: -100,
             links: {
               blockchain:
-                "https://etherscan.io/token/0xae7ab96520de3a18e5e111b5eaab095312d7fe84?a=0xcde2f579bb7df0a19c82a494f5441480e2b206a0",
+                "https://etherscan.io/address/0xCdE2f579bb7dF0a19C82A494f5441480e2B206A0",
+            },
+          },
+          {
+            id: "lido-contract",
+            name: "Lido stETH",
+            type: "BACKEND_CONTRACT",
+            desc: "Liquid Staking Protocol",
+            fx: 0,
+            fy: 200,
+            fz: -150,
+            links: {
+              blockchain:
+                "https://etherscan.io/token/0xae7ab96520de3a18e5e111b5eaab095312d7fe84",
             },
           },
         ],
@@ -371,7 +384,12 @@
           // Backend Connections
           {
             source: "voting-contract",
-            target: "steth-contract",
+            target: "scdb-contract",
+            type: "DASHED_GREEN",
+          },
+          {
+            source: "scdb-contract",
+            target: "lido-contract",
             type: "DASHED_GREEN",
           },
         ],
