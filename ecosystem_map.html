@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="it">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Ecosistema Comitato Studentesco - Mappa 3D</title>
+    <style>
+      body {
+        margin: 0;
+        overflow: hidden;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background-color: #000011;
+        color: white;
+      }
+      #graph-container {
+        width: 100vw;
+        height: 100vh;
+        touch-action: none; /* Importante per mobile: previene lo scroll della pagina mentre si ruota il modello */
+      }
+      #ui-overlay {
+        position: absolute;
+        top: 20px;
+        left: 20px;
+        background: rgba(0, 0, 0, 0.7);
+        padding: 20px;
+        border-radius: 10px;
+        border: 1px solid #333;
+        max-width: 300px;
+        pointer-events: none; /* Let clicks pass through to canvas unless on interactive elements */
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+        transition: opacity 0.3s;
+      }
+      #ui-overlay h1 {
+        margin-top: 0;
+        font-size: 1.2rem;
+        color: #4db8ff;
+      }
+      .legend-item {
+        display: flex;
+        align-items: center;
+        margin-bottom: 8px;
+        font-size: 0.9rem;
+        color: #eee;
+      }
+      .color-box {
+        width: 15px;
+        height: 15px;
+        margin-right: 10px;
+        border-radius: 3px;
+      }
+      .instructions {
+        margin-top: 15px;
+        font-size: 0.8rem;
+        color: #aaa;
+      }
+
+      /* Responsive Styles for Mobile */
+      @media (max-width: 768px) {
+        #ui-overlay {
+          top: auto;
+          bottom: 20px;
+          left: 10px;
+          right: 10px;
+          max-width: none;
+          padding: 15px;
+          pointer-events: none; /* Container doesn't block */
+        }
+        #ui-overlay > * {
+          pointer-events: auto; /* Content is interactive if needed */
+        }
+        #ui-overlay h1 {
+          font-size: 1rem;
+          margin-bottom: 5px;
+        }
+        .legend-item {
+          font-size: 0.8rem;
+          margin-bottom: 4px;
+          display: inline-flex;
+          margin-right: 15px;
+        }
+        #legend {
+          display: flex;
+          flex-wrap: wrap;
+        }
+        .instructions {
+          display: none; /* Hide instructions on small screens to save space */
+        }
+        #node-modal {
+          width: 85%;
+          min-width: auto;
+          padding: 20px;
+        }
+        .modal-title {
+          font-size: 1.2rem;
+        }
+      }
+
+      /* Modal Styles */
+      #node-modal {
+        display: none;
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: #1a1a2e;
+        padding: 25px;
+        border-radius: 12px;
+        border: 1px solid #4db8ff;
+        box-shadow: 0 0 20px rgba(77, 184, 255, 0.3);
+        z-index: 1000;
+        min-width: 300px;
+        text-align: center;
+      }
+      #modal-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.6);
+        z-index: 999;
+      }
+      .modal-title {
+        font-size: 1.4rem;
+        margin-bottom: 10px;
+        color: #fff;
+      }
+      .modal-desc {
+        color: #ccc;
+        margin-bottom: 20px;
+        font-size: 0.95rem;
+      }
+      .modal-btn {
+        display: block;
+        width: 100%;
+        padding: 10px;
+        margin: 8px 0;
+        background: #007bff;
+        color: white;
+        text-decoration: none;
+        border-radius: 5px;
+        transition: background 0.2s;
+        border: none;
+        cursor: pointer;
+        font-size: 1rem;
+      }
+      .modal-btn:hover {
+        background: #0056b3;
+      }
+      .modal-btn.secondary {
+        background: #444;
+      }
+      .modal-btn.secondary:hover {
+        background: #555;
+      }
+      .close-btn {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: none;
+        border: none;
+        color: #aaa;
+        font-size: 1.2rem;
+        cursor: pointer;
+      }
+      .close-btn:hover {
+        color: white;
+      }
+    </style>
+    <!-- Import Three.js and 3d-force-graph -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://unpkg.com/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+    <script src="https://unpkg.com/3d-force-graph"></script>
+  </head>
+  <body>
+    <div id="ui-overlay">
+      <h1>Ecosistema Decentralizzato</h1>
+      <div id="legend">
+        <div class="legend-item">
+          <div class="color-box" style="background-color: #007bff"></div>
+          Frontend Centralizzato
+        </div>
+        <div class="legend-item">
+          <div class="color-box" style="background-color: #28a745"></div>
+          Frontend Decentralizzato
+        </div>
+        <div class="legend-item">
+          <div class="color-box" style="background-color: #dc3545"></div>
+          Backend (Smart Contract)
+        </div>
+      </div>
+      <div class="instructions">
+        <p>Navigazione:</p>
+        <ul>
+          <li>Ruota: Click sinistro + trascina</li>
+          <li>Zoom: Rotella mouse</li>
+          <li>Pan: Click destro + trascina</li>
+          <li>Click sui nodi per dettagli</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Modal HTML -->
+    <div id="modal-overlay"></div>
+    <div id="node-modal">
+      <button class="close-btn" onclick="closeModal()">×</button>
+      <div class="modal-title" id="modal-title">Titolo Nodo</div>
+      <div class="modal-desc" id="modal-desc">Descrizione del nodo...</div>
+      <div id="modal-actions">
+        <!-- Buttons will be injected here -->
+      </div>
+    </div>
+
+    <div id="graph-container"></div>
+
+    <script>
+      // Configurazione Tipi di Nodo
+      const NODE_TYPES = {
+        FRONTEND_CENTRALIZED: {
+          color: "#007bff",
+          label: "Frontend Centralizzato",
+          geometry: "Globe",
+        },
+        FRONTEND_DECENTRALIZED: {
+          color: "#ffff00",
+          label: "Frontend Decentralizzato",
+          geometry: "Globe",
+        },
+        BACKEND_CONTRACT: {
+          color: "#dc3545",
+          label: "Smart Contract",
+          geometry: "Box",
+        },
+      };
+
+      // Configurazione Tipi di Link
+      const LINK_TYPES = {
+        SOLID_GRAY: { color: "#888", dash: null },
+        SOLID_RED: { color: "#ff4444", dash: null },
+        SOLID_GREEN: { color: "#28a745", dash: null }, // Nuovo tipo verde solido
+        DASHED_GRAY: { color: "#888", dash: [2, 1] },
+        DASHED_RED: { color: "#ff4444", dash: [2, 1] },
+        DASHED_YELLOW: { color: "#ffdd44", dash: [2, 1] },
+        DASHED_GREEN: { color: "#28a745", dash: [2, 1] }, // Nuovo tipo verde tratteggiato
+        INVISIBLE: { color: "transparent", dash: null },
+      };
+
+      // Dati Iniziali (Aggiornati)
+      const graphData = {
+        nodes: [
+          // Voting Group (Sinistra)
+          {
+            id: "voting-dapp",
+            name: "Voting DApp",
+            type: "FRONTEND_CENTRALIZED",
+            desc: "Interfaccia centralizzata per il voto",
+            fx: -150,
+            fy: 0,
+            fz: 100, // Posizione fissa iniziale
+            links: {
+              site: "https://votazionicomitato.vercel.app/",
+              github: "https://github.com/DuPont9029/C.O.V.D.E.V",
+            },
+          },
+          {
+            id: "decentralized-voting-dapp",
+            name: "Decentralized Voting DApp",
+            type: "FRONTEND_DECENTRALIZED",
+            desc: "Interfaccia decentralizzata per il voto",
+            fx: -200,
+            fy: -50,
+            fz: 150,
+            links: {
+              site: "https://cdm4upstdl7n3kbaooekc6nxgrrfjnazeocmunigrettyv2562rq.trump-ario.store/ENnKPlMa_t2oIHOIoXm3NGJUtBkjhMo1BoknPFdd9qM",
+              github:
+                "https://ardrive.trump-ario.store/#/file/d0895fc6-2085-4914-85c9-99104bf05f21/view",
+            },
+          },
+          // Assembly Group (Destra)
+          {
+            id: "assembly-dapp",
+            name: "Assembly DApp",
+            type: "FRONTEND_CENTRALIZED",
+            desc: "Interfaccia centralizzata per richiesta assemblee",
+            fx: 150,
+            fy: 0,
+            fz: 100,
+            links: {
+              site: "https://assembleecomitato.vercel.app/",
+              github: "https://github.com/DuPont9029/assembly",
+            },
+          },
+          {
+            id: "decentralized-assembly-dapp",
+            name: "Decentralized Assembly DApp",
+            type: "FRONTEND_DECENTRALIZED",
+            desc: "Interfaccia decentralizzata per richiesta assemblee",
+            fx: 200,
+            fy: -50,
+            fz: 150,
+            links: {
+              site: "https://bdqkkrbu7qskoptqv6d5a2upwapqycr7pc74ij5mx4lu6cxvw4ea.arweave.net/COClRDT8JKc-cK-H0GqPsB8MCj94v8QnrL8XTwr1twg",
+              github:
+                "https://ardrive.trump-ario.store/#/file/d597e202-1fe9-4b42-90dc-d84892e988c3/view",
+            },
+          },
+          // Backend (Centro e Retro)
+          {
+            id: "voting-contract",
+            name: "Smart Contract Voto",
+            type: "BACKEND_CONTRACT",
+            desc: "Logica di voto su blockchain",
+            fx: 0,
+            fy: 100,
+            fz: 0, // In alto al centro
+            links: {
+              blockchain:
+                "https://etherscan.io/address/0x88f2d5c26395dedbf978079e5142caf548688e72",
+              github:
+                "https://github.com/DuPont9029/C.O.V.D.E.V/blob/main/contratto.sol",
+            },
+          },
+          {
+            id: "steth-contract",
+            name: "Smart Contract stETH",
+            type: "BACKEND_CONTRACT",
+            desc: "Treasury / Staking Contract",
+            fx: 0,
+            fy: 150,
+            fz: -100, // Ancora più indietro e in alto
+            links: {
+              blockchain:
+                "https://etherscan.io/token/0xae7ab96520de3a18e5e111b5eaab095312d7fe84?a=0xcde2f579bb7df0a19c82a494f5441480e2b206a0",
+            },
+          },
+        ],
+        links: [
+          // Voting Connections
+          {
+            source: "voting-dapp",
+            target: "voting-contract",
+            type: "SOLID_GREEN",
+          },
+          {
+            source: "decentralized-voting-dapp",
+            target: "voting-contract",
+            type: "SOLID_GREEN",
+          },
+          {
+            source: "voting-dapp",
+            target: "decentralized-voting-dapp",
+            type: "INVISIBLE",
+          },
+          // Assembly Connections
+          {
+            source: "assembly-dapp",
+            target: "voting-contract",
+            type: "SOLID_GREEN",
+          },
+          {
+            source: "decentralized-assembly-dapp",
+            target: "voting-contract",
+            type: "SOLID_GREEN",
+          },
+          {
+            source: "assembly-dapp",
+            target: "decentralized-assembly-dapp",
+            type: "INVISIBLE",
+          },
+          // Backend Connections
+          {
+            source: "voting-contract",
+            target: "steth-contract",
+            type: "DASHED_GREEN",
+          },
+        ],
+      };
+
+      // Gestione Modale
+      const modalOverlay = document.getElementById("modal-overlay");
+      const nodeModal = document.getElementById("node-modal");
+      const modalTitle = document.getElementById("modal-title");
+      const modalDesc = document.getElementById("modal-desc");
+      const modalActions = document.getElementById("modal-actions");
+
+      function openModal(node) {
+        modalTitle.textContent = node.name;
+        modalDesc.textContent = node.desc;
+        modalActions.innerHTML = ""; // Pulisci bottoni precedenti
+
+        if (node.type === "BACKEND_CONTRACT") {
+          if (node.links && node.links.blockchain) {
+            modalActions.innerHTML += `<a href="${node.links.blockchain}" target="_blank" class="modal-btn">Vedi su Blockchain</a>`;
+          }
+          if (node.links && node.links.github) {
+            modalActions.innerHTML += `<a href="${node.links.github}" target="_blank" class="modal-btn secondary">Codice su GitHub</a>`;
+          }
+        } else {
+          if (node.links && node.links.site) {
+            modalActions.innerHTML += `<a href="${node.links.site}" target="_blank" class="modal-btn">Vai al Sito</a>`;
+          }
+          if (node.links && node.links.github) {
+            modalActions.innerHTML += `<a href="${node.links.github}" target="_blank" class="modal-btn secondary">Codice su GitHub</a>`;
+          }
+        }
+
+        modalOverlay.style.display = "block";
+        nodeModal.style.display = "block";
+      }
+
+      function closeModal() {
+        modalOverlay.style.display = "none";
+        nodeModal.style.display = "none";
+      }
+
+      modalOverlay.addEventListener("click", closeModal);
+
+      // Inizializzazione Grafo
+      const Graph = ForceGraph3D()(document.getElementById("graph-container"))
+        .graphData(graphData)
+        .nodeLabel(
+          (node) =>
+            `<span style="color: black; background: white; padding: 2px 5px; border-radius: 3px;">${node.name}</span><br><small style="color: #eee">${node.desc}</small>`
+        )
+        .nodeColor((node) =>
+          NODE_TYPES[node.type] ? NODE_TYPES[node.type].color : "#ffffff"
+        )
+        .onNodeClick((node) => {
+          openModal(node);
+        })
+        .linkColor((link) => {
+          const type = LINK_TYPES[link.type] || LINK_TYPES.SOLID_GRAY;
+          return type.color;
+        })
+        .linkWidth((link) => (link.type === "INVISIBLE" ? 0 : 1))
+        .linkVisibility((link) => link.type !== "INVISIBLE")
+        .linkResolution(6);
+
+      // Configurazione forze personalizzata dopo l'inizializzazione
+      Graph.d3Force("charge").strength(-100); // Riduci respingimento per evitare esplosioni
+
+      // Libera i nodi dopo un breve periodo per permettere interazione
+      setTimeout(() => {
+        graphData.nodes.forEach((node) => {
+          node.fx = undefined;
+          node.fy = undefined;
+          node.fz = undefined;
+        });
+        // Riaccendi le forze per un assestamento naturale
+        Graph.d3ReheatSimulation();
+      }, 2000);
+
+      Graph.d3Force("link").distance((link) => {
+        if (link.type === "INVISIBLE") return 30; // Distanza breve per nodi raggruppati
+        return 150; // Distanza standard aumentata (default è ~30)
+      });
+
+      Graph.nodeThreeObject((node) => {
+        const typeConfig = NODE_TYPES[node.type] || {
+          color: "#999999",
+          geometry: "Sphere",
+        };
+
+        // Dimensione base aumentata
+        const size = 12;
+
+        // Array per animazione
+        if (!window.animatedNodes) window.animatedNodes = [];
+
+        if (node.type === "BACKEND_CONTRACT") {
+          const group = new THREE.Group();
+
+          // Aggiungi una sfera invisibile come hitbox per migliorare l'interazione
+          const hitboxGeo = new THREE.SphereGeometry(size, 16, 16);
+          const hitboxMat = new THREE.MeshBasicMaterial({
+            visible: false,
+            color: 0xff0000,
+            transparent: true,
+            opacity: 0.1,
+          });
+          const hitbox = new THREE.Mesh(hitboxGeo, hitboxMat);
+          group.add(hitbox);
+
+          const loader = new THREE.GLTFLoader();
+
+          loader.load(
+            "./Ethereum%20Logo.glb",
+            (gltf) => {
+              const model = gltf.scene;
+              // Centra e scala il modello
+              const box = new THREE.Box3().setFromObject(model);
+              const center = box.getCenter(new THREE.Vector3());
+              const sizeVec = box.getSize(new THREE.Vector3());
+
+              // Centra il modello
+              model.position.x += model.position.x - center.x;
+              model.position.y += model.position.y - center.y;
+              model.position.z += model.position.z - center.z;
+
+              // Scala per adattarsi alla dimensione desiderata (es. size)
+              const maxDim = Math.max(sizeVec.x, sizeVec.y, sizeVec.z);
+              if (maxDim > 0) {
+                const scale = (size * 1.5) / maxDim; // Leggermente più grande per visibilità
+                model.scale.set(scale, scale, scale);
+              }
+
+              group.add(model);
+            },
+            undefined,
+            (error) => {
+              console.error("Error loading GLB:", error);
+              // Fallback: rendi visibile la hitbox o aggiungi geometria
+              const geometry = new THREE.BoxGeometry(size, size, size);
+              const material = new THREE.MeshLambertMaterial({
+                color: typeConfig.color,
+              });
+              group.add(new THREE.Mesh(geometry, material));
+            }
+          );
+
+          return group;
+        }
+
+        let geometry;
+
+        if (typeConfig.geometry === "Box") {
+          geometry = new THREE.BoxGeometry(size, size, size);
+        } else if (
+          typeConfig.geometry === "Globe" ||
+          node.type === "FRONTEND_DECENTRALIZED"
+        ) {
+          const group = new THREE.Group();
+
+          // Hitbox invisibile per interazione fluida
+          const hitboxGeo = new THREE.SphereGeometry(size, 16, 16);
+          const hitboxMat = new THREE.MeshBasicMaterial({
+            visible: false,
+            color: 0x00ff00,
+            transparent: true,
+            opacity: 0.1,
+          });
+          const hitbox = new THREE.Mesh(hitboxGeo, hitboxMat);
+          group.add(hitbox);
+
+          // Wireframe Globe
+          const globeGeo = new THREE.IcosahedronGeometry(size * 0.8, 2);
+          const globeMat = new THREE.MeshBasicMaterial({
+            color: 0xffff00, // Giallo brillante
+            wireframe: true,
+            transparent: true,
+            opacity: 0.9,
+          });
+          const globe = new THREE.Mesh(globeGeo, globeMat);
+
+          // Aggiungi nucleo interno per visibilità
+          const coreGeo = new THREE.IcosahedronGeometry(size * 0.4, 1);
+          const coreMat = new THREE.MeshBasicMaterial({
+            color: typeConfig.color,
+            transparent: true,
+            opacity: 0.5,
+          });
+          const core = new THREE.Mesh(coreGeo, coreMat);
+          globe.add(core);
+
+          group.add(globe);
+
+          // Aggiungi alla lista per animazione
+          window.animatedNodes.push(globe);
+
+          return group;
+        } else {
+          // FRONTEND_CENTRALIZED (Default Sphere)
+          geometry = new THREE.SphereGeometry(size * 0.6, 16, 16);
+        }
+
+        const material = new THREE.MeshLambertMaterial({
+          color: typeConfig.color,
+          transparent: true,
+          opacity: 0.9,
+        });
+
+        return new THREE.Mesh(geometry, material);
+      })
+        .linkThreeObject((link) => {
+          const typeConfig = LINK_TYPES[link.type];
+          if (typeConfig && typeConfig.dash) {
+            const material = new THREE.LineDashedMaterial({
+              color: typeConfig.color,
+              dashSize: 5,
+              gapSize: 3,
+              opacity: 0.8,
+              transparent: true,
+            });
+            const geometry = new THREE.BufferGeometry();
+            // Inizializza con punti dummy, verrà aggiornato in linkPositionUpdate
+            geometry.setFromPoints([
+              new THREE.Vector3(0, 0, 0),
+              new THREE.Vector3(0, 0, 0),
+            ]);
+            const line = new THREE.Line(geometry, material);
+            line.computeLineDistances();
+            return line;
+          }
+          return null; // Usa il default per i link non tratteggiati
+        })
+        .linkPositionUpdate((line, { start, end }) => {
+          if (line.material instanceof THREE.LineDashedMaterial) {
+            const startV = new THREE.Vector3(start.x, start.y, start.z);
+            const endV = new THREE.Vector3(end.x, end.y, end.z);
+            line.geometry.setFromPoints([startV, endV]);
+            line.computeLineDistances();
+            return true;
+          }
+          return false;
+        });
+
+      // Aggiungi un po' di rotazione automatica lenta
+      let angle = 0;
+      setInterval(() => {
+        // Animazione nodi
+        if (window.animatedNodes) {
+          window.animatedNodes.forEach((node) => {
+            node.rotation.y += 0.02;
+            node.rotation.x += 0.01;
+          });
+        }
+
+        // Graph.cameraPosition({
+        //     x: 200 * Math.sin(angle),
+        //     z: 200 * Math.cos(angle)
+        // });
+        // angle += Math.PI / 1000;
+      }, 30);
+
+      // Responsive resize
+      window.addEventListener("resize", () => {
+        Graph.width(window.innerWidth);
+        Graph.height(window.innerHeight);
+      });
+    </script>
+  </body>
+</html>
