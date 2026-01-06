@@ -249,6 +249,72 @@
         text-shadow: 0 0 5px #00ddee;
         transform: scale(1.05);
       }
+
+      /* Dev Mode Panel Styles */
+      #dev-panel {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        z-index: 100;
+        background: rgba(0, 0, 0, 0.8);
+        padding: 15px;
+        border: 1px solid #00ddee;
+        border-radius: 5px;
+        color: #00ddee;
+        font-family: "Courier New", monospace;
+        min-width: 150px;
+      }
+      .switch {
+        position: relative;
+        display: inline-block;
+        width: 40px;
+        height: 20px;
+        vertical-align: middle;
+        margin-right: 10px;
+      }
+      .switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+      }
+      .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #ccc;
+        transition: 0.4s;
+        border-radius: 20px;
+      }
+      .slider:before {
+        position: absolute;
+        content: "";
+        height: 16px;
+        width: 16px;
+        left: 2px;
+        bottom: 2px;
+        background-color: white;
+        transition: 0.4s;
+        border-radius: 50%;
+      }
+      input:checked + .slider {
+        background-color: #00ddee;
+      }
+      input:checked + .slider:before {
+        transform: translateX(20px);
+      }
+      .dev-label {
+        font-weight: bold;
+        vertical-align: middle;
+      }
+      #coords-display {
+        margin-top: 10px;
+        border-top: 1px solid #555;
+        padding-top: 5px;
+        font-size: 0.9rem;
+      }
     </style>
     <!-- Import Three.js and 3d-force-graph -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -285,6 +351,20 @@
 
     <div id="reset-btn-container">
       <button id="reset-camera" class="hackers-btn">RESET VISUALE</button>
+    </div>
+
+    <!-- Dev Mode Panel -->
+    <div id="dev-panel">
+      <label class="switch">
+        <input type="checkbox" id="dev-mode-toggle" />
+        <span class="slider round"></span>
+      </label>
+      <span class="dev-label">DEV MODE</span>
+      <div id="coords-display" style="display: none">
+        X: <span id="coord-x">0</span><br />
+        Y: <span id="coord-y">0</span><br />
+        Z: <span id="coord-z">0</span>
+      </div>
     </div>
 
     <!-- Modal HTML -->
@@ -355,25 +435,45 @@
                     pos: 100,100,0
                     blockchain: "https://etherscan.io/address/0x070f867acfAbE468A36621C8584ed3ba0CB541Fa"
 
-                  %% Collegamenti
+      new-contract["Journal Smart Contract"]:::BACKEND_CONTRACT
+                    desc: "Smart contract per gestire il giornale scolastico"
+                    pos: -300,200,50
+                    blockchain: "#"
+
+      journal-centralized["Journal Centralized App"]:::WIP_FRONTEND
+                    desc: "Sito centralizzato giornale (WIP)"
+                    pos: -250,200,100
+
+      journal-decentralized["Journal Decentralized App"]:::WIP_FRONTEND
+                    desc: "Sito decentralizzato giornale (WIP)"
+                    pos: -350,200,100
+
+      %% Collegamenti
                                     %% ==> Verde Solido (Active)
                                     %% --> Grigio Solido (Standard)
                                     %% -.-> Verde Tratteggiato (Backend/Dashed)
+                                    %% === Giallo Solido (Bridge)
+                                    %% ==o Arancione Solido (WIP Bridge)
                                     %% ~~~ Invisibile (Grouping)
 
                                     voting-dapp ==> voting-contract
                                     decentralized-voting-dapp ==> voting-contract
-                                    voting-dapp ~~~ decentralized-voting-dapp
+                                    voting-dapp === decentralized-voting-dapp
 
                                     assembly-dapp ==> voting-contract
                                     decentralized-assembly-dapp ==> voting-contract
-                                    assembly-dapp ~~~ decentralized-assembly-dapp
+                                    assembly-dapp === decentralized-assembly-dapp
 
                                     voting-contract -.-> scdb-contract
                                     scdb-contract -.-> lido-contract
             scdb-contract -.-> donate-contract
+            new-contract ~~~ voting-contract
 
             donate-nft-dapp ==> donate-contract
+
+            journal-centralized ==> new-contract
+            journal-decentralized ==> new-contract
+            journal-centralized ==o journal-decentralized
     </script>
 
     <script>
@@ -394,6 +494,16 @@
           label: "Smart Contract",
           geometry: "Box",
         },
+        WIP_FRONTEND: {
+          color: "#888888",
+          label: "Work in Progress",
+          geometry: "Globe",
+        },
+        WIP_CONTRACT: {
+          color: "#888888",
+          label: "Work in Progress",
+          geometry: "Box",
+        },
       };
 
       // Configurazione Tipi di Link
@@ -401,6 +511,8 @@
         SOLID_GRAY: { color: "#888", dash: null },
         SOLID_RED: { color: "#ff4444", dash: null },
         SOLID_GREEN: { color: "#28a745", dash: null },
+        SOLID_YELLOW: { color: "#FFD700", dash: null }, // Giallo Solido
+        SOLID_ORANGE: { color: "#FFAA00", dash: null }, // Arancione Solido
         DASHED_GRAY: { color: "#888", dash: [2, 1] },
         DASHED_RED: { color: "#ff4444", dash: [2, 1] },
         DASHED_YELLOW: { color: "#ffdd44", dash: [2, 1] },
@@ -464,14 +576,16 @@
           }
 
           // Regex per Link: Source OP Target
-          // OP: ==> (SOLID_GREEN), --> (SOLID_GRAY), -.-> (DASHED_ORANGE), ~~~ (INVISIBLE)
-          const linkMatch = l.match(/^([\w-]+)\s+([=\-~.>]+)\s+([\w-]+)/);
+          // OP: ==> (SOLID_GREEN), --> (SOLID_GRAY), -.-> (DASHED_ORANGE), === (SOLID_YELLOW), ==o (SOLID_ORANGE), ~~~ (INVISIBLE)
+          const linkMatch = l.match(/^([\w-]+)\s+([=\-~.>o]+)\s+([\w-]+)/);
           if (linkMatch) {
             const [_, source, op, target] = linkMatch;
             let type = "SOLID_GRAY";
 
             if (op === "==>") type = "SOLID_GREEN";
             else if (op === "-.->") type = "DASHED_ORANGE";
+            else if (op === "===") type = "SOLID_YELLOW";
+            else if (op === "==o") type = "SOLID_ORANGE";
             else if (op === "~~~") type = "INVISIBLE";
             else if (op === "-->") type = "SOLID_GRAY";
 
@@ -496,7 +610,14 @@
 
       function openModal(node) {
         modalTitle.textContent = node.name;
-        modalDesc.textContent = node.desc;
+
+        // Gestione WIP
+        if (node.type === "WIP_FRONTEND" || node.type === "WIP_CONTRACT") {
+          modalDesc.textContent = "Work in Progress";
+        } else {
+          modalDesc.textContent = node.desc;
+        }
+
         modalActions.innerHTML = ""; // Pulisci bottoni precedenti
 
         if (node.type === "BACKEND_CONTRACT") {
@@ -546,6 +667,70 @@
         .linkWidth((link) => (link.type === "INVISIBLE" ? 0 : 1))
         .linkVisibility((link) => link.type !== "INVISIBLE")
         .linkResolution(6);
+
+      // Dev Mode Logic
+      const devModeToggle = document.getElementById("dev-mode-toggle");
+      const coordsDisplay = document.getElementById("coords-display");
+      const coordX = document.getElementById("coord-x");
+      const coordY = document.getElementById("coord-y");
+      const coordZ = document.getElementById("coord-z");
+
+      let devModeEnabled = false;
+      const raycaster = new THREE.Raycaster();
+      const mouse = new THREE.Vector2();
+      const plane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0); // Piano Z=0
+      const planeIntersect = new THREE.Vector3();
+
+      devModeToggle.addEventListener("change", (e) => {
+        devModeEnabled = e.target.checked;
+        coordsDisplay.style.display = devModeEnabled ? "block" : "none";
+      });
+
+      document.addEventListener("mousemove", (event) => {
+        if (!devModeEnabled) return;
+
+        // Calcola coordinate mouse normalizzate (-1 a +1)
+        mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+        mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+        // Aggiorna raycaster con la camera del grafo
+        const camera = Graph.camera();
+        if (camera) {
+          raycaster.setFromCamera(mouse, camera);
+
+          // Intersezione con il piano Z=0
+          // Nota: se il raggio è parallelo al piano, intersectPlane restituisce null
+          const intersection = raycaster.ray.intersectPlane(
+            plane,
+            planeIntersect
+          );
+
+          if (intersection) {
+            coordX.textContent = Math.round(intersection.x);
+            coordY.textContent = Math.round(intersection.y);
+            coordZ.textContent = 0; // Proiezione su piano 0
+          }
+        }
+      });
+
+      // Override coordinate quando si passa sopra un nodo
+      Graph.onNodeHover((node) => {
+        if (devModeEnabled) {
+          if (node) {
+            coordX.textContent = Math.round(node.x);
+            coordY.textContent = Math.round(node.y);
+            coordZ.textContent = Math.round(node.z);
+            coordsDisplay.style.color = "#ffff00"; // Evidenzia in giallo
+            document.body.style.cursor = "pointer";
+          } else {
+            coordsDisplay.style.color = "#00ddee"; // Reset colore
+            document.body.style.cursor = "default";
+          }
+        } else {
+          // Comportamento standard cursore
+          document.body.style.cursor = node ? "pointer" : "default";
+        }
+      });
 
       // Configurazione forze personalizzata dopo l'inizializzazione
       Graph.d3Force("charge").strength(-100); // Riduci respingimento per evitare esplosioni
@@ -619,7 +804,7 @@
       }, 2000);
 
       Graph.d3Force("link").distance((link) => {
-        if (link.type === "INVISIBLE") return 30; // Distanza breve per nodi raggruppati
+        if (link.type === "INVISIBLE") return 150; // Distanza aumentata per evitare sovrapposizioni
         return 150; // Distanza standard aumentata (default è ~30)
       });
 
