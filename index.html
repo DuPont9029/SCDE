@@ -450,7 +450,7 @@
                     desc: "Sito decentralizzato giornale"
                     pos: -350,200,100
                     site: "https://hnglekggyech44efeqxfla4b5gbya4cjfod2iamb65ar5i7fcqca.arweave.net/O0yyKMbBBH5whSQuVYOB6YOAcEkrh6QBgfdBHqPlFAQ"
-                    github: "https://github.com/DuPont9029/giornale_cs"
+                    github: "https://ardrive.trump-ario.store/#/file/978c2e6b-9b47-4904-b0d6-f9173b3ec40e/view"
 
       %% Collegamenti
                                     %% ==> Verde Solido (Active)
@@ -636,7 +636,11 @@
             modalActions.innerHTML += `<a href="${node.links.site}" target="_blank" class="modal-btn">Vai al Sito</a>`;
           }
           if (node.links && node.links.github) {
-            modalActions.innerHTML += `<a href="${node.links.github}" target="_blank" class="modal-btn secondary">Codice su GitHub</a>`;
+            const githubLabel =
+              node.type === "FRONTEND_DECENTRALIZED"
+                ? "Scarica Client"
+                : "Codice su GitHub";
+            modalActions.innerHTML += `<a href="${node.links.github}" target="_blank" class="modal-btn secondary">${githubLabel}</a>`;
           }
         }
 
