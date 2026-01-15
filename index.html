@@ -122,6 +122,24 @@
         .modal-title {
           font-size: 1.2rem;
         }
+
+        /* Mobile Dev Mode adjustments */
+        #dev-panel {
+          width: 100%;
+          border-left: none;
+          border-radius: 0;
+          max-height: 50vh; /* Default collapsed height limit if needed, but handled by JS */
+        }
+        #dev-panel.sidebar-expanded {
+          height: 100vh;
+          max-height: 100vh;
+          z-index: 2000;
+        }
+        /* Hide reset button when editor is open on mobile to avoid clutter */
+        body.editor-open #reset-btn-container {
+          display: none;
+          right: 20px; /* Reset position override */
+        }
       }
 
       /* Modal Styles */
@@ -221,6 +239,11 @@
         bottom: 20px;
         right: 20px;
         z-index: 100;
+        transition: right 0.3s ease-in-out;
+      }
+      /* Shift button when editor is open */
+      body.editor-open #reset-btn-container {
+        right: 340px;
       }
       .hackers-btn {
         background: rgba(0, 0, 0, 0.7);
@@ -252,17 +275,27 @@
 
       /* Dev Mode Panel Styles */
       #dev-panel {
-        position: absolute;
-        top: 20px;
-        right: 20px;
+        position: fixed;
+        top: 0;
+        right: 0;
         z-index: 100;
-        background: rgba(0, 0, 0, 0.8);
+        background: rgba(0, 15, 30, 0.95);
         padding: 15px;
-        border: 1px solid #00ddee;
-        border-radius: 5px;
+        border-left: 1px solid #00ddee;
+        border-bottom: 1px solid #00ddee;
+        border-radius: 0 0 0 10px;
         color: #00ddee;
         font-family: "Courier New", monospace;
-        min-width: 150px;
+        width: 320px;
+        max-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        transition: height 0.3s ease-in-out;
+      }
+      #dev-panel.sidebar-expanded {
+        height: 100vh;
+        border-radius: 0;
+        border-bottom: none;
       }
       .switch {
         position: relative;
@@ -315,6 +348,81 @@
         padding-top: 5px;
         font-size: 0.9rem;
       }
+
+      /* Editor Controls */
+      #editor-controls {
+        margin-top: 15px;
+        border-top: 1px solid #00ddee;
+        padding-top: 10px;
+        display: none;
+        overflow-y: auto;
+        flex: 1; /* Fill remaining height */
+        padding-right: 5px; /* Space for scrollbar */
+      }
+      /* Custom Scrollbar for Editor */
+      #editor-controls::-webkit-scrollbar {
+        width: 8px;
+      }
+      #editor-controls::-webkit-scrollbar-track {
+        background: rgba(0, 0, 0, 0.3);
+      }
+      #editor-controls::-webkit-scrollbar-thumb {
+        background: #00ddee;
+        border-radius: 4px;
+      }
+      .editor-input {
+        width: 100%;
+        margin-bottom: 8px;
+        background: rgba(0, 0, 0, 0.5);
+        border: 1px solid #00ddee;
+        color: #fff;
+        padding: 5px;
+        font-family: inherit;
+        font-size: 0.8rem;
+      }
+      .editor-btn {
+        width: 100%;
+        background: #00ddee;
+        color: #000;
+        border: none;
+        padding: 8px;
+        cursor: pointer;
+        font-weight: bold;
+        margin-bottom: 10px;
+        text-transform: uppercase;
+        font-size: 0.8rem;
+      }
+      .editor-btn:hover {
+        background: #fff;
+      }
+      .section-title {
+        color: #00ddee;
+        font-size: 0.9rem;
+        margin-bottom: 5px;
+        text-transform: uppercase;
+        border-bottom: 1px solid #333;
+        padding-bottom: 2px;
+      }
+      .panel-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 10px;
+      }
+      .mini-btn {
+        background: transparent;
+        border: 1px solid #00ddee;
+        color: #00ddee;
+        cursor: pointer;
+        padding: 2px 8px;
+        font-size: 0.8rem;
+        border-radius: 3px;
+        display: none; /* Hidden by default */
+      }
+      .mini-btn:hover {
+        background: #00ddee;
+        color: #000;
+      }
     </style>
     <!-- Import Three.js and 3d-force-graph -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -355,15 +463,93 @@
 
     <!-- Dev Mode Panel -->
     <div id="dev-panel">
-      <label class="switch">
-        <input type="checkbox" id="dev-mode-toggle" />
-        <span class="slider round"></span>
-      </label>
-      <span class="dev-label">DEV MODE</span>
+      <div class="panel-header">
+        <div>
+          <label class="switch">
+            <input type="checkbox" id="dev-mode-toggle" />
+            <span class="slider round"></span>
+          </label>
+          <span class="dev-label">DEV MODE</span>
+        </div>
+        <button id="toggle-editor-btn" class="mini-btn">EDITOR ▼</button>
+      </div>
+
       <div id="coords-display" style="display: none">
+        ID: <span id="coord-id" style="color: #fff; font-weight: bold">-</span
+        ><br />
         X: <span id="coord-x">0</span><br />
         Y: <span id="coord-y">0</span><br />
         Z: <span id="coord-z">0</span>
+      </div>
+
+      <div id="editor-controls">
+        <div class="section-title">Aggiungi Nodo</div>
+        <input
+          type="text"
+          id="new-node-id"
+          class="editor-input"
+          placeholder="ID (es. my-dapp)"
+        />
+        <input
+          type="text"
+          id="new-node-name"
+          class="editor-input"
+          placeholder="Nome Visibile"
+        />
+        <select id="new-node-type" class="editor-input">
+          <option value="FRONTEND_CENTRALIZED">Centralized App</option>
+          <option value="FRONTEND_DECENTRALIZED">Decentralized App</option>
+          <option value="BACKEND_CONTRACT">Smart Contract</option>
+          <option value="WIP_FRONTEND">WIP App</option>
+          <option value="WIP_CONTRACT">WIP Contract</option>
+        </select>
+        <input
+          type="text"
+          id="new-node-desc"
+          class="editor-input"
+          placeholder="Descrizione"
+        />
+        <input
+          type="text"
+          id="new-node-link"
+          class="editor-input"
+          placeholder="Link (Site/Blockchain)"
+        />
+        <input
+          type="text"
+          id="new-node-github"
+          class="editor-input"
+          placeholder="Link GitHub (opz)"
+        />
+        <button id="btn-place-node" class="editor-btn">
+          POSIZIONA (Click su mappa)
+        </button>
+
+        <div class="section-title">Aggiungi Link</div>
+        <select id="link-source" class="editor-input">
+          <option>Sorgente...</option>
+        </select>
+        <select id="link-target" class="editor-input">
+          <option>Destinazione...</option>
+        </select>
+        <select id="link-type" class="editor-input">
+          <option value="SOLID_GREEN">Verde (Active)</option>
+          <option value="SOLID_GRAY">Grigio (Standard)</option>
+          <option value="SOLID_YELLOW">Giallo (Bridge)</option>
+          <option value="SOLID_ORANGE">Arancione (WIP)</option>
+          <option value="DASHED_ORANGE">Tratteggiato</option>
+          <option value="INVISIBLE">Invisibile</option>
+        </select>
+        <button id="btn-add-link" class="editor-btn">CREA COLLEGAMENTO</button>
+
+        <div class="section-title">Esporta</div>
+        <button
+          id="btn-export-pr"
+          class="editor-btn"
+          style="background: #28a745; color: white"
+        >
+          COPIA & APRI GITHUB
+        </button>
       </div>
     </div>
 
@@ -679,11 +865,15 @@
       // Dev Mode Logic
       const devModeToggle = document.getElementById("dev-mode-toggle");
       const coordsDisplay = document.getElementById("coords-display");
+      const editorControls = document.getElementById("editor-controls");
+      const toggleEditorBtn = document.getElementById("toggle-editor-btn");
+      const coordId = document.getElementById("coord-id");
       const coordX = document.getElementById("coord-x");
       const coordY = document.getElementById("coord-y");
       const coordZ = document.getElementById("coord-z");
 
       let devModeEnabled = false;
+      let hoveredNode = null;
       const raycaster = new THREE.Raycaster();
       const mouse = new THREE.Vector2();
       const plane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0); // Piano Z=0
@@ -692,22 +882,236 @@
       devModeToggle.addEventListener("change", (e) => {
         devModeEnabled = e.target.checked;
         coordsDisplay.style.display = devModeEnabled ? "block" : "none";
+        toggleEditorBtn.style.display = devModeEnabled ? "block" : "none";
+
+        // Hide editor by default when toggling dev mode
+        if (!devModeEnabled) {
+          editorControls.style.display = "none";
+          toggleEditorBtn.textContent = "EDITOR ▼";
+          const devPanel = document.getElementById("dev-panel");
+          devPanel.classList.remove("sidebar-expanded");
+          document.body.classList.remove("editor-open");
+        }
       });
 
-      document.addEventListener("mousemove", (event) => {
-        if (!devModeEnabled) return;
+      toggleEditorBtn.addEventListener("click", () => {
+        const devPanel = document.getElementById("dev-panel");
+        if (
+          editorControls.style.display === "none" ||
+          editorControls.style.display === ""
+        ) {
+          editorControls.style.display = "block";
+          devPanel.classList.add("sidebar-expanded");
+          document.body.classList.add("editor-open");
+          toggleEditorBtn.textContent = "EDITOR ▲";
+          populateSelects();
+        } else {
+          editorControls.style.display = "none";
+          devPanel.classList.remove("sidebar-expanded");
+          document.body.classList.remove("editor-open");
+          toggleEditorBtn.textContent = "EDITOR ▼";
+        }
+      });
 
-        // Calcola coordinate mouse normalizzate (-1 a +1)
-        mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-        mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+      // --- Editor Logic ---
+      const btnPlaceNode = document.getElementById("btn-place-node");
+      const btnAddLink = document.getElementById("btn-add-link");
+      const btnExport = document.getElementById("btn-export-pr");
 
-        // Aggiorna raycaster con la camera del grafo
+      function populateSelects() {
+        const sourceSelect = document.getElementById("link-source");
+        const targetSelect = document.getElementById("link-target");
+        const currentSource = sourceSelect.value;
+        const currentTarget = targetSelect.value;
+
+        sourceSelect.innerHTML = "<option>Sorgente...</option>";
+        targetSelect.innerHTML = "<option>Destinazione...</option>";
+
+        const { nodes } = Graph.graphData();
+        nodes.forEach((n) => {
+          const optS = document.createElement("option");
+          optS.value = n.id;
+          optS.textContent = `${n.name} (${n.id})`;
+          sourceSelect.appendChild(optS);
+
+          const optT = document.createElement("option");
+          optT.value = n.id;
+          optT.textContent = `${n.name} (${n.id})`;
+          targetSelect.appendChild(optT);
+        });
+
+        if (currentSource) sourceSelect.value = currentSource;
+        if (currentTarget) targetSelect.value = currentTarget;
+      }
+
+      let isPlacingNode = false;
+      let newNodeData = null;
+
+      btnPlaceNode.addEventListener("click", () => {
+        const id = document.getElementById("new-node-id").value;
+        const name = document.getElementById("new-node-name").value;
+        if (!id || !name) {
+          alert("ID e Nome sono obbligatori!");
+          return;
+        }
+
+        isPlacingNode = true;
+        document.body.style.cursor = "crosshair";
+        btnPlaceNode.textContent = "CLICCA SULLA MAPPA...";
+        btnPlaceNode.style.background = "#ffff00";
+        btnPlaceNode.style.color = "#000";
+
+        newNodeData = {
+          id,
+          name,
+          type: document.getElementById("new-node-type").value,
+          desc: document.getElementById("new-node-desc").value,
+          links: {},
+        };
+
+        const link = document.getElementById("new-node-link").value;
+        const github = document.getElementById("new-node-github").value;
+
+        if (newNodeData.type === "BACKEND_CONTRACT") {
+          if (link) newNodeData.links.blockchain = link;
+        } else {
+          if (link) newNodeData.links.site = link;
+        }
+        if (github) newNodeData.links.github = github;
+      });
+
+      Graph.onBackgroundClick((evt) => {
+        if (!isPlacingNode) return;
+
+        let clientX = evt.clientX;
+        let clientY = evt.clientY;
+
+        // Fallback for touch events if clientX is missing directly on evt
+        if (
+          clientX === undefined &&
+          evt.changedTouches &&
+          evt.changedTouches.length > 0
+        ) {
+          clientX = evt.changedTouches[0].clientX;
+          clientY = evt.changedTouches[0].clientY;
+        }
+
+        if (clientX === undefined) return; // Should not happen usually
+
+        mouse.x = (clientX / window.innerWidth) * 2 - 1;
+        mouse.y = -(clientY / window.innerHeight) * 2 + 1;
+        raycaster.setFromCamera(mouse, Graph.camera());
+        const intersection = raycaster.ray.intersectPlane(
+          plane,
+          planeIntersect
+        );
+
+        if (intersection) {
+          const { nodes, links } = Graph.graphData();
+
+          newNodeData.fx = Math.round(intersection.x);
+          newNodeData.fy = Math.round(intersection.y);
+          newNodeData.fz = 0;
+
+          const newNodes = [...nodes, newNodeData];
+          Graph.graphData({ nodes: newNodes, links: links });
+
+          isPlacingNode = false;
+          document.body.style.cursor = "default";
+          btnPlaceNode.textContent = "POSIZIONA (Click su mappa)";
+          btnPlaceNode.style.background = "#00ddee";
+          btnPlaceNode.style.color = "#000";
+
+          document.getElementById("new-node-id").value = "";
+          document.getElementById("new-node-name").value = "";
+          document.getElementById("new-node-desc").value = "";
+          document.getElementById("new-node-link").value = "";
+          document.getElementById("new-node-github").value = "";
+
+          populateSelects();
+        }
+      });
+
+      btnAddLink.addEventListener("click", () => {
+        const source = document.getElementById("link-source").value;
+        const target = document.getElementById("link-target").value;
+        const type = document.getElementById("link-type").value;
+
+        if (source === "Sorgente..." || target === "Destinazione...") {
+          alert("Seleziona sorgente e destinazione!");
+          return;
+        }
+
+        const { nodes, links } = Graph.graphData();
+        const newLinks = [...links, { source, target, type }];
+        Graph.graphData({ nodes, links: newLinks });
+      });
+
+      function serializeGraph() {
+        const { nodes, links } = Graph.graphData();
+        let output = "%% Generated by Dev Mode\n";
+
+        nodes.forEach((n) => {
+          output += `${n.id}["${n.name}"]:::${n.type}\n`;
+          if (n.desc) output += `                    desc: "${n.desc}"\n`;
+          const x = Math.round(n.fx !== undefined ? n.fx : n.x);
+          const y = Math.round(n.fy !== undefined ? n.fy : n.y);
+          const z = Math.round(n.fz !== undefined ? n.fz : n.z);
+          output += `                    pos: ${x},${y},${z}\n`;
+
+          if (n.links) {
+            Object.entries(n.links).forEach(([k, v]) => {
+              if (v) output += `                    ${k}: "${v}"\n`;
+            });
+          }
+          output += "\n";
+        });
+
+        output += "      %% Collegamenti\n";
+        links.forEach((l) => {
+          const sourceId = l.source.id || l.source;
+          const targetId = l.target.id || l.target;
+
+          let op = "-->";
+          if (l.type === "SOLID_GREEN") op = "==>";
+          else if (l.type === "SOLID_YELLOW") op = "===";
+          else if (l.type === "SOLID_ORANGE") op = "==o";
+          else if (l.type === "DASHED_ORANGE") op = "-.->";
+          else if (l.type === "INVISIBLE") op = "~~~";
+          else if (l.type === "SOLID_GRAY") op = "-->";
+
+          output += `            ${sourceId} ${op} ${targetId}\n`;
+        });
+
+        return output;
+      }
+
+      btnExport.addEventListener("click", () => {
+        const mermaidData = serializeGraph();
+        navigator.clipboard.writeText(mermaidData).then(
+          () => {
+            alert("Codice copiato! Crea una PR su GitHub con i nuovi dati.");
+            window.open(
+              "https://github.com/DuPont9029/StudentCommitteeDecentralizedEcosystem/pulls",
+              "_blank"
+            );
+          },
+          (err) => {
+            console.error("Copy failed: ", err);
+            alert("Errore copia. Vedi console.");
+          }
+        );
+      });
+
+      function updateDevCoords(clientX, clientY) {
+        if (!devModeEnabled || hoveredNode) return;
+
+        mouse.x = (clientX / window.innerWidth) * 2 - 1;
+        mouse.y = -(clientY / window.innerHeight) * 2 + 1;
+
         const camera = Graph.camera();
         if (camera) {
           raycaster.setFromCamera(mouse, camera);
-
-          // Intersezione con il piano Z=0
-          // Nota: se il raggio è parallelo al piano, intersectPlane restituisce null
           const intersection = raycaster.ray.intersectPlane(
             plane,
             planeIntersect
@@ -716,18 +1120,36 @@
           if (intersection) {
             coordX.textContent = Math.round(intersection.x);
             coordY.textContent = Math.round(intersection.y);
-            coordZ.textContent = 0; // Proiezione su piano 0
+            coordZ.textContent = 0;
+            coordId.textContent = "-";
           }
+        }
+      }
+
+      document.addEventListener("mousemove", (event) => {
+        updateDevCoords(event.clientX, event.clientY);
+      });
+
+      document.addEventListener("touchmove", (event) => {
+        if (event.touches.length > 0) {
+          updateDevCoords(event.touches[0].clientX, event.touches[0].clientY);
         }
       });
 
       // Override coordinate quando si passa sopra un nodo
       Graph.onNodeHover((node) => {
+        hoveredNode = node;
         if (devModeEnabled) {
           if (node) {
-            coordX.textContent = Math.round(node.x);
-            coordY.textContent = Math.round(node.y);
-            coordZ.textContent = Math.round(node.z);
+            coordId.textContent = node.id;
+            // Usa coordinate fisse se disponibili, altrimenti quelle correnti
+            const x = node.fx !== undefined ? node.fx : node.x;
+            const y = node.fy !== undefined ? node.fy : node.y;
+            const z = node.fz !== undefined ? node.fz : node.z;
+
+            coordX.textContent = Math.round(x);
+            coordY.textContent = Math.round(y);
+            coordZ.textContent = Math.round(z);
             coordsDisplay.style.color = "#ffff00"; // Evidenzia in giallo
             document.body.style.cursor = "pointer";
           } else {
