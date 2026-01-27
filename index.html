@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="it">
   <head>
     <meta charset="UTF-8" />
@@ -196,7 +196,9 @@
         text-transform: uppercase;
         font-weight: 700;
         letter-spacing: 1px;
-        transition: transform 0.2s, box-shadow 0.2s;
+        transition:
+          transform 0.2s,
+          box-shadow 0.2s;
         border: 1px solid #00aaff;
         cursor: pointer;
         clip-path: polygon(
@@ -568,102 +570,98 @@
 
     <!-- DATI DEL GRAFO IN FORMATO MERMAID-LIKE PER FACILE MODIFICA -->
     <script id="mermaid-data" type="text/plain">
-                                    %% Definizioni Nodi (id["Label"]:::TIPO)
-                                    %% Proprietà aggiuntive indentate sotto il nodo
-                                    voting-dapp["Voting Centralized App"]:::FRONTEND_CENTRALIZED
-                                      desc: "Interfaccia centralizzata per il voto"
-                                      pos: -150,0,100
-                                      site: "https://votazionicomitato.vercel.app/"
-                                      github: "https://github.com/DuPont9029/C.O.V.D.E.V"
+                                          %% Definizioni Nodi (id["Label"]:::TIPO)
+                                          %% Proprietà aggiuntive indentate sotto il nodo
+     voting-dapp["Voting Centralized App"]:::FRONTEND_CENTRALIZED
+                          desc: "Interfaccia centralizzata per il voto"
+                          pos: -119,-166,-11
+                          site: "https://votazionicomitato.vercel.app/"
+                          github: "https://github.com/DuPont9029/C.O.V.D.E.V"
 
-                                    decentralized-voting-dapp["Decentralized Voting DApp"]:::FRONTEND_DECENTRALIZED
-                                      desc: "Interfaccia decentralizzata per il voto"
-                                      pos: -200,-50,150
-                                      site: "https://cdm4upstdl7n3kbaooekc6nxgrrfjnazeocmunigrettyv2562rq.arweave.net/ENnKPlMa_t2oIHOIoXm3NGJUtBkjhMo1BoknPFdd9qM"
-                                      github: "https://ardrive.trump-ario.store/#/file/d0895fc6-2085-4914-85c9-99104bf05f21/view"
+      decentralized-voting-dapp["Decentralized Voting DApp"]:::FRONTEND_DECENTRALIZED
+                          desc: "Interfaccia decentralizzata per il voto"
+                          pos: -217,-84,69
+                          site: "https://cdm4upstdl7n3kbaooekc6nxgrrfjnazeocmunigrettyv2562rq.arweave.net/ENnKPlMa_t2oIHOIoXm3NGJUtBkjhMo1BoknPFdd9qM"
+                          github: "https://ardrive.trump-ario.store/#/file/d0895fc6-2085-4914-85c9-99104bf05f21/view"
 
-                                    assembly-dapp["Assembly Centralized App"]:::FRONTEND_CENTRALIZED
-                                      desc: "Interfaccia centralizzata per richiesta assemblee"
-                                      pos: 250,0,100
-                                      site: "https://assembleecomitato.vercel.app/"
-                                      github: "https://github.com/DuPont9029/assembly"
+      assembly-dapp["Assembly Centralized App"]:::FRONTEND_CENTRALIZED
+                          desc: "Interfaccia centralizzata per richiesta assemblee"
+                          pos: -22,-43,211
+                          site: "https://assembleecomitato.vercel.app/"
+                          github: "https://github.com/DuPont9029/assembly"
 
-                                    decentralized-assembly-dapp["Decentralized Assembly DApp"]:::FRONTEND_DECENTRALIZED
-                                      desc: "Interfaccia decentralizzata per richiesta assemblee"
-                                      pos: 300,-50,150
-                                      site: "https://bdqkkrbu7qskoptqv6d5a2upwapqycr7pc74ij5mx4lu6cxvw4ea.arweave.net/COClRDT8JKc-cK-H0GqPsB8MCj94v8QnrL8XTwr1twg"
-                                      github: "https://ardrive.trump-ario.store/#/file/d597e202-1fe9-4b42-90dc-d84892e988c3/view"
+      decentralized-assembly-dapp["Decentralized Assembly DApp"]:::FRONTEND_DECENTRALIZED
+                          desc: "Interfaccia decentralizzata per richiesta assemblee"
+                          pos: -167,-20,182
+                          site: "https://bdqkkrbu7qskoptqv6d5a2upwapqycr7pc74ij5mx4lu6cxvw4ea.arweave.net/COClRDT8JKc-cK-H0GqPsB8MCj94v8QnrL8XTwr1twg"
+                          github: "https://ardrive.trump-ario.store/#/file/d597e202-1fe9-4b42-90dc-d84892e988c3/view"
 
-                                    voting-contract["Smart Contract Voto"]:::BACKEND_CONTRACT
-                                      desc: "Logica di voto su blockchain"
-                                      pos: 0,100,0
-                                      blockchain: "https://etherscan.io/address/0x88f2d5c26395dedbf978079e5142caf548688e72"
-                                      github: "https://github.com/DuPont9029/C.O.V.D.E.V/blob/main/contratto.sol"
+      voting-contract["Smart Contract Voto"]:::BACKEND_CONTRACT
+                          desc: "Logica di voto su blockchain"
+                          pos: -67,-36,60
+                          blockchain: "https://etherscan.io/address/0x88f2d5c26395dedbf978079e5142caf548688e72"
+                          github: "https://github.com/DuPont9029/C.O.V.D.E.V/blob/main/contratto.sol"
 
-                                    scdb-contract["SCDB Bank"]:::BACKEND_CONTRACT
-                                      desc: "Student Committee Decentralized Bank"
-                                      pos: 0,150,-100
-                                      blockchain: "https://etherscan.io/address/0xCdE2f579bb7dF0a19C82A494f5441480e2B206A0"
+      scdb-contract["SCDB Bank"]:::BACKEND_CONTRACT
+                          desc: "Student Committee Decentralized Bank"
+                          pos: 99,-27,33
+                          blockchain: "https://etherscan.io/address/0xCdE2f579bb7dF0a19C82A494f5441480e2B206A0"
 
-                                    lido-contract["Lido stETH"]:::BACKEND_CONTRACT
-                                      desc: "Liquid Staking Protocol"
-                                      pos: 0,200,-150
-                                      blockchain: "https://etherscan.io/token/0xae7ab96520de3a18e5e111b5eaab095312d7fe84"
+      lido-contract["Lido stETH"]:::BACKEND_CONTRACT
+                          desc: "Liquid Staking Protocol"
+                          pos: 212,-95,110
+                          blockchain: "https://etherscan.io/token/0xae7ab96520de3a18e5e111b5eaab095312d7fe84"
 
-                  donate-nft-dapp["Donate & Receive NFT"]:::FRONTEND_DECENTRALIZED
-        desc: "Fai una donazione e ricevi un NFT"
-        pos: 100,100,80
-        site: "https://5zmsul6imbcxc4hpcvfgmneqdybtpcug45qbcplklo63zaablvuq.arweave.net/7lkqL8hgRXFw7xVKZjSQHgM3iobnYBE9alu9vIABXWk"
-        github: "https://ardrive.trump-ario.store/#/file/f50c3069-9285-471c-bac7-d78846a97e37/view"
+      donate-nft-dapp["Donate & Receive NFT"]:::FRONTEND_DECENTRALIZED
+                          desc: "Fai una donazione e ricevi un NFT"
+                          pos: 350,78,-132
+                          site: "https://5zmsul6imbcxc4hpcvfgmneqdybtpcug45qbcplklo63zaablvuq.arweave.net/7lkqL8hgRXFw7xVKZjSQHgM3iobnYBE9alu9vIABXWk"
+                          github: "https://ardrive.trump-ario.store/#/file/f50c3069-9285-471c-bac7-d78846a97e37/view"
 
       donate-contract["Donate Contract"]:::BACKEND_CONTRACT
-                    desc: "Smart Contract Donazioni"
-                    pos: 100,100,0
-                    blockchain: "https://etherscan.io/address/0x070f867acfAbE468A36621C8584ed3ba0CB541Fa"
+                          desc: "Smart Contract Donazioni"
+                          pos: 225,25,-60
+                          blockchain: "https://etherscan.io/address/0x070f867acfAbE468A36621C8584ed3ba0CB541Fa"
 
       new-contract["Journal Smart Contract"]:::BACKEND_CONTRACT
-                    desc: "Smart contract per gestire il giornale scolastico"
-                    pos: -300,200,50
-                    blockchain: "https://etherscan.io/token/0x6462a6c527373a2ee3f1415503ae4bab5acd5618"
+                          desc: "Smart contract per gestire il giornale scolastico"
+                          pos: -77,62,-76
+                          blockchain: "https://etherscan.io/token/0x6462a6c527373a2ee3f1415503ae4bab5acd5618"
 
       journal-centralized["Journal Centralized App"]:::FRONTEND_CENTRALIZED
-                    desc: "Sito centralizzato giornale"
-                    pos: -250,200,100
-                    site: "https://itisenricofermi.github.io/giornale_cs/"
-                    github: "https://github.com/ITISEnricoFermi/giornale_cs"
+                          desc: "Sito centralizzato giornale"
+                          pos: -209,136,-120
+                          site: "https://itisenricofermi.github.io/giornale_cs/"
+                          github: "https://github.com/ITISEnricoFermi/giornale_cs"
 
       journal-decentralized["Journal Decentralized App"]:::FRONTEND_DECENTRALIZED
-                    desc: "Sito decentralizzato giornale"
-                    pos: -350,200,100
-                    site: "https://hnglekggyech44efeqxfla4b5gbya4cjfod2iamb65ar5i7fcqca.arweave.net/O0yyKMbBBH5whSQuVYOB6YOAcEkrh6QBgfdBHqPlFAQ"
-                    github: "https://ardrive.trump-ario.store/#/file/978c2e6b-9b47-4904-b0d6-f9173b3ec40e/view"
+                          desc: "Sito decentralizzato giornale"
+                          pos: -84,159,-200
+                          site: "https://hnglekggyech44efeqxfla4b5gbya4cjfod2iamb65ar5i7fcqca.arweave.net/O0yyKMbBBH5whSQuVYOB6YOAcEkrh6QBgfdBHqPlFAQ"
+                          github: "https://ardrive.trump-ario.store/#/file/978c2e6b-9b47-4904-b0d6-f9173b3ec40e/view"
 
-      %% Collegamenti
-                                    %% ==> Verde Solido (Active)
-                                    %% --> Grigio Solido (Standard)
-                                    %% -.-> Verde Tratteggiato (Backend/Dashed)
-                                    %% === Giallo Solido (Bridge)
-                                    %% ==o Arancione Solido (WIP Bridge)
-                                    %% ~~~ Invisibile (Grouping)
+      nft-viewer["visualizzatore nft"]:::FRONTEND_DECENTRALIZED
+                          desc: "sito per visualizzare nft"
+                          pos: 74,10,-65
+                          site: "https://jjumf4r4zgie6yvucg52oojvonjbuinfjnjic7cuwbt6oiprr4qa.arweave.net/SmjC8jzJkE9itBG7pzk1c1IaIaVLUoF8VLBn5yHxjyA"
 
-                                    voting-dapp ==> voting-contract
-                                    decentralized-voting-dapp ==> voting-contract
-                                    voting-dapp === decentralized-voting-dapp
-
-                                    assembly-dapp ==> voting-contract
-                                    decentralized-assembly-dapp ==> voting-contract
-                                    assembly-dapp === decentralized-assembly-dapp
-
-                                    voting-contract -.-> scdb-contract
-                                    scdb-contract -.-> lido-contract
-            scdb-contract -.-> donate-contract
-            new-contract ~~~ voting-contract
-
-            donate-nft-dapp ==> donate-contract
-
-            journal-centralized ==> new-contract
-            journal-decentralized ==> new-contract
-            journal-centralized === journal-decentralized
+            %% Collegamenti
+                  voting-dapp ==> voting-contract
+                  decentralized-voting-dapp ==> voting-contract
+                  voting-dapp === decentralized-voting-dapp
+                  assembly-dapp ==> voting-contract
+                  decentralized-assembly-dapp ==> voting-contract
+                  assembly-dapp === decentralized-assembly-dapp
+                  voting-contract -.-> scdb-contract
+                  scdb-contract -.-> lido-contract
+                  scdb-contract -.-> donate-contract
+                  new-contract ~~~ voting-contract
+                  donate-nft-dapp ==> donate-contract
+                  journal-centralized ==> new-contract
+                  journal-decentralized ==> new-contract
+                  journal-centralized === journal-decentralized
+                  donate-contract ==> nft-viewer
+                  new-contract ==> nft-viewer
     </script>
 
     <script>
@@ -846,10 +844,10 @@
         .graphData(graphData)
         .nodeLabel(
           (node) =>
-            `<span style="color: black; background: white; padding: 2px 5px; border-radius: 3px;">${node.name}</span><br><small style="color: #eee">${node.desc}</small>`
+            `<span style="color: black; background: white; padding: 2px 5px; border-radius: 3px;">${node.name}</span><br><small style="color: #eee">${node.desc}</small>`,
         )
         .nodeColor((node) =>
-          NODE_TYPES[node.type] ? NODE_TYPES[node.type].color : "#ffffff"
+          NODE_TYPES[node.type] ? NODE_TYPES[node.type].color : "#ffffff",
         )
         .onNodeClick((node) => {
           openModal(node);
@@ -1003,7 +1001,7 @@
         raycaster.setFromCamera(mouse, Graph.camera());
         const intersection = raycaster.ray.intersectPlane(
           plane,
-          planeIntersect
+          planeIntersect,
         );
 
         if (intersection) {
@@ -1093,13 +1091,13 @@
             alert("Codice copiato! Crea una PR su GitHub con i nuovi dati.");
             window.open(
               "https://github.com/DuPont9029/StudentCommitteeDecentralizedEcosystem/pulls",
-              "_blank"
+              "_blank",
             );
           },
           (err) => {
             console.error("Copy failed: ", err);
             alert("Errore copia. Vedi console.");
-          }
+          },
         );
       });
 
@@ -1114,7 +1112,7 @@
           raycaster.setFromCamera(mouse, camera);
           const intersection = raycaster.ray.intersectPlane(
             plane,
-            planeIntersect
+            planeIntersect,
           );
 
           if (intersection) {
@@ -1202,7 +1200,7 @@
       }
       particlesGeo.setAttribute(
         "position",
-        new THREE.BufferAttribute(posArray, 3)
+        new THREE.BufferAttribute(posArray, 3),
       );
       const particlesMat = new THREE.PointsMaterial({
         size: 3,
@@ -1315,7 +1313,7 @@
                 color: typeConfig.color,
               });
               group.add(new THREE.Mesh(geometry, material));
-            }
+            },
           );
 
           return group;
@@ -1451,7 +1449,7 @@
         Graph.cameraPosition(
           { x: 0, y: 0, z: 600 }, // Nuova posizione
           { x: 0, y: 0, z: 0 }, // LookAt
-          2000 // Durata transizione (ms)
+          2000, // Durata transizione (ms)
         );
       });
     </script>
